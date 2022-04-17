@@ -9,7 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
+import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
@@ -21,91 +21,95 @@ import java.util.List;
 @Component
 public class AspectUtility {
 
-	public String getMethodName(JoinPoint joinPoint) {
+    public String getMethodName(JoinPoint joinPoint) {
 
-		MethodSignature signature = (MethodSignature) joinPoint.getSignature();
-		String methodName = signature.getMethod().getName();
-		String simpleClassName = signature.getMethod().getDeclaringClass().getSimpleName();
+        MethodSignature signature = (MethodSignature) joinPoint.getSignature();
+        String methodName = signature.getMethod().getName();
+        String simpleClassName = signature.getMethod().getDeclaringClass().getSimpleName();
 
-		methodName = simpleClassName + "." + methodName;
+        methodName = simpleClassName + "." + methodName;
 
-		return methodName;
+        return methodName;
 
-	}
+    }
 
-	public String getAPINameIfAvailable() {
+    public String getAPINameIfAvailable() {
 
-		try {
-			return ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest()
-					.getRequestURI();
+        try {
+            RequestAttributes requestAttributes = RequestContextHolder.getRequestAttributes();
+            if (requestAttributes == null) {
+                return null;
+            }
+            else {
+                return ((ServletRequestAttributes) requestAttributes).getRequest() == null
+                        ? null
+                        : ((ServletRequestAttributes) requestAttributes).getRequest().getRequestURI();
+            }
+        } catch (Exception e) {
+            return null;
+        }
 
-		} catch (Exception e) {
-			return null;
-		}
+    }
 
-	}
+    public void addContextRelatedTags(JoinPoint joinPoint, Metric metric) {
 
-	public void addContextRelatedTags(JoinPoint joinPoint, Metric metric) {
+        String methodName = getMethodName(joinPoint);
+        String apiName = getAPINameIfAvailable();
 
-		String methodName = getMethodName(joinPoint);
-		String apiName = getAPINameIfAvailable();
+        if (!(methodName == null || "".equals(methodName))) {
+            metric.setTag(MetricTagName.METHOD.getTagName(), methodName);
+        }
 
-		if (!StringUtils.isEmpty(methodName)) {
-			metric.setTag(MetricTagName.METHOD.getTagName(), methodName);
-		}
+        if (!(apiName == null || "".equals(apiName))) {
+            metric.setTag(MetricTagName.API.getTagName(), apiName);
+        }
 
-		if (!StringUtils.isEmpty(apiName)) {
-			metric.setTag(MetricTagName.API.getTagName(), apiName);
-		}
+    }
 
-	}
+    public Monitor getMonitorAnnotation(JoinPoint joinPoint) {
 
-	public Monitor getMonitorAnnotation(JoinPoint joinPoint) {
+        MethodSignature signature = (MethodSignature) joinPoint.getSignature();
+        Method method = signature.getMethod();
+        Class<?> declaringClass = method.getDeclaringClass();
 
-		MethodSignature signature = (MethodSignature) joinPoint.getSignature();
-		Method method = signature.getMethod();
-		Class<?> declaringClass = method.getDeclaringClass();
+        if (method.isAnnotationPresent(Monitor.class)) {
 
-		if (method.isAnnotationPresent(Monitor.class)) {
+            return method.getAnnotation(Monitor.class);
+        } else if (declaringClass.isAnnotationPresent(Monitor.class)) {
 
-			return method.getAnnotation(Monitor.class);
-		} else if (declaringClass.isAnnotationPresent(Monitor.class)) {
+            return declaringClass.getAnnotation(Monitor.class);
+        } else {
+            return getDefaultMonitorAnnotation();
+        }
 
-			return declaringClass.getAnnotation(Monitor.class);
-		} else {
+    }
 
-			return getDefaultMonitorAnnotation();
-		}
+    public Monitor getDefaultMonitorAnnotation() {
 
-	}
+        return DefaultMetricSubmissionUtility.class.getAnnotation(Monitor.class);
+    }
 
-	public Monitor getDefaultMonitorAnnotation() {
+    public List<Metric> getArgumentMetrics(JoinPoint joinPoint) {
 
-		return DefaultMetricSubmissionUtility.class.getAnnotation(Monitor.class);
-	}
+        List<Metric> metrics = new ArrayList<>();
 
-	public List<Metric> getArgumentMetrics(JoinPoint joinPoint) {
+        Object[] params = joinPoint.getArgs();
 
-		List<Metric> metrics = new ArrayList<>();
-		
-		Object[] params = joinPoint.getArgs();
-		
-		if (params.length > 0) {
+        if (params.length > 0) {
 
-			for (Object parameter : params) {
-				
-				if(parameter instanceof MonitoredEntity) {
-					
-					MonitoredEntity entity = (MonitoredEntity) parameter ;
-					metrics.addAll(entity.getMetrics());
-				}
-			}
+            for (Object parameter : params) {
 
-		}
+                if (parameter instanceof MonitoredEntity) {
 
-		return metrics;
-	}
-	
-	
+                    MonitoredEntity entity = (MonitoredEntity) parameter;
+                    metrics.addAll(entity.getMetrics());
+                }
+            }
+
+        }
+
+        return metrics;
+    }
+
 
 }

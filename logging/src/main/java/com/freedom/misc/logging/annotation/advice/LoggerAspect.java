@@ -18,12 +18,11 @@ public class LoggerAspect {
     @Around("@annotation(logged)")
     public Object log(ProceedingJoinPoint pjp, Logged logged) throws Throwable {
 
-        Logger log = null;
-        Object response = null;
+        Logger log = LoggerFactory.getLogger(pjp.getTarget().getClass().getCanonicalName());
+        Object response;
 
         try {
 
-            log = LoggerFactory.getLogger(pjp.getTarget().getClass().getCanonicalName());
             MethodSignature signature = (MethodSignature) pjp.getSignature();
 
             if (logged.isRequestEnabled() && !LogLevel.OFF.equals(logged.requestLevel())) {
@@ -57,6 +56,7 @@ public class LoggerAspect {
 
                     log.error("Exception Stack Trace: ", th);
                 }
+
 
             }
 

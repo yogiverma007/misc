@@ -7,19 +7,19 @@ import org.apache.logging.log4j.core.pattern.ConverterKeys;
 
 @Plugin(name = "logmask", category = "Converter")
 @ConverterKeys({ "msg" })
-public class LogMaskerImpl extends AbstractLogMasker {
+public class LogMasker extends AbstractLogMasker {
 
-    public LogMaskerImpl(String[] options) {
+    public LogMasker(String[] options) {
 
         super("msg", "msg");
     }
 
-    public static LogMaskerImpl newInstance(final String[] options) {
+    public static LogMasker newInstance(final String[] options) {
 
-        return new LogMaskerImpl(options);
+        return new LogMasker(options);
     }
 
-    protected LogMaskerImpl(String name, String style) {
+    protected LogMasker(String name, String style) {
 
         super(name, style);
     }

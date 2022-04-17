@@ -2,6 +2,7 @@ package com.freedom.misc.logging.service;
 
 import com.freedom.misc.logging.constants.LogsMaskingEnums;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.stereotype.Service;
 
 
 import java.util.HashMap;
@@ -9,9 +10,10 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@Service
 public class LogsMaskingService {
 
-    private static Map<Integer, String> MASK_CACHE = new HashMap<>();
+    private final static Map<Integer, String> MASK_CACHE = new HashMap<>();
 
     public static String mask(String log) {
         for (LogsMaskingEnums maskEnum : LogsMaskingEnums.values()) {

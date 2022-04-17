@@ -41,13 +41,13 @@ public class MonitorAspect extends BaseAspect {
 	}
 
 	@Around("monitorAnnotated()")
+	@Override
 	public Object executeAround(ProceedingJoinPoint joinPoint) throws Throwable {
-
 		return super.executeAround(joinPoint);
-
 	}
 
 	@AfterThrowing(pointcut = "monitorAnnotated()", throwing = "e")
+	@Override
 	public void executeAfterThrowing(JoinPoint joinPoint, Throwable e) {
 
 		super.executeAfterThrowing(joinPoint, e);

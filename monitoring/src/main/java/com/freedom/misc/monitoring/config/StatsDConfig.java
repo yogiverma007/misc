@@ -42,7 +42,6 @@ public class StatsDConfig {
 		return new NonBlockingStatsDClient(metricsPrefix, statsDHost,statsDPort, getConstantTags());
 	}
 
-	//TODO selfNodeIp, container etc info.
 	private String[] getConstantTags() {
 		
 		Map<String, String> tagsMap = new HashMap<>();

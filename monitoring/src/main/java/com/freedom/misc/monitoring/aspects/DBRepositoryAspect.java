@@ -20,9 +20,11 @@ public class DBRepositoryAspect extends BaseAspect{
 
 	@Pointcut("execution(* org.springframework.data.repository.CrudRepository+.*(..))")
 	public void dbRepositoryExecutionPointcut() {
+		// implementation called below
 	}
 
 	@Around("dbRepositoryExecutionPointcut()")
+	@Override
 	public Object executeAround(ProceedingJoinPoint joinPoint) throws Throwable {
 		
 		TimeMetric timeMetric = new TimeMetric();
